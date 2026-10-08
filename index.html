@@ -15,7 +15,7 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
-            overflow: hidden; /* Prevent scrolling when using arrow keys */
+            overflow: hidden;
         }
         
         h1 {
@@ -48,7 +48,6 @@
     <h1>Snake</h1>
     <div id="score-board">Score: <span id="score">0</span></div>
     
-    <!-- This is the game board -->
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     
     <div class="instructions">Press any arrow key to start moving!</div>
@@ -57,101 +56,96 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Game settings
-        const gridSize = 20; // Size of one grid square
-        const tileCount = canvas.width / gridSize; // How many squares fit on the board
+        const gridSize = 20; 
+        const tileCount = canvas.width / gridSize; 
 
-        // Initial snake properties
-        let snake = [
-            { x: 10, y: 10 } // Snake starts in the middle
-        ];
+        let snake = [{ x: 10, y: 10 }];
         let food = { x: 5, y: 5 };
         
-        // Speed in X and Y directions
         let dx = 0;
         let dy = 0;
         let score = 0;
         let gameLoop;
         let gameStarted = false;
 
-        // Listen for keyboard presses
         document.addEventListener("keydown", changeDirection);
 
-        // Draw the initial board
         clearCanvas();
+        drawWatermark(); // Draw watermark initially
         drawFood();
         drawSnake();
 
-        // The main game loop that repeats over and over
         function main() {
             if (hasGameEnded()) {
                 alert("Game Over! Your final score is: " + score + "\nClick OK to play again.");
-                document.location.reload(); // Reload the page to restart
+                document.location.reload(); 
                 return;
             }
 
             setTimeout(function onTick() {
                 clearCanvas();
+                drawWatermark(); // Redraw watermark every frame so it stays in the background
                 drawFood();
                 moveSnake();
                 drawSnake();
                 main();
-            }, 100); // 100 milliseconds determines the speed of the snake
+            }, 100); 
         }
 
-        // Wipe the canvas clean before drawing the next frame
         function clearCanvas() {
             ctx.fillStyle = "#34495e";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Draw the snake on the canvas
+        // --- NEW WATERMARK FUNCTION ---
+        function drawWatermark() {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.15)"; // Very faint white (15% opacity)
+            ctx.font = "bold 36px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            // Place exactly in the center of the 400x400 canvas
+            ctx.fillText("DAELAN REVV", canvas.width / 2, canvas.height / 2);
+        }
+
         function drawSnake() {
             snake.forEach((part, index) => {
-                // The head is a lighter green than the body
                 ctx.fillStyle = index === 0 ? "#2ecc71" : "#27ae60"; 
-                ctx.strokeStyle = "#145a32"; // Dark border
+                ctx.strokeStyle = "#145a32"; 
                 ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
                 ctx.strokeRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
             });
         }
 
-        // Draw the food
         function drawFood() {
-            ctx.fillStyle = "#e74c3c"; // Red food
+            ctx.fillStyle = "#e74c3c"; 
             ctx.strokeStyle = "#922b21";
             ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
             ctx.strokeRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
         }
 
-        // Calculate the snake's new position
         function moveSnake() {
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-            snake.unshift(head); // Add new head
+            snake.unshift(head); 
 
-            // Check if the snake ate the food
             if (head.x === food.x && head.y === food.y) {
                 score += 10;
                 document.getElementById("score").innerText = score;
-                generateFood(); // Make new food
+                generateFood(); 
             } else {
-                snake.pop(); // Remove tail if it didn't eat
+                snake.pop(); 
             }
         }
 
-        // Place food in a random spot
         function generateFood() {
             food.x = Math.floor(Math.random() * tileCount);
             food.y = Math.floor(Math.random() * tileCount);
             
-            // Make sure food doesn't spawn directly on top of the snake
             snake.forEach(function has_snake_eaten_food(part) {
                 const has_eaten = part.x === food.x && part.y === food.y;
                 if (has_eaten) generateFood();
             });
         }
 
-        // Handle arrow keys
         function changeDirection(event) {
             const LEFT_KEY = 37;
             const RIGHT_KEY = 39;
@@ -160,7 +154,6 @@
 
             const keyPressed = event.keyCode;
             
-            // Prevent scrolling the window with arrows
             if([LEFT_KEY, RIGHT_KEY, UP_KEY, DOWN_KEY].includes(keyPressed)) {
                 event.preventDefault();
             }
@@ -170,13 +163,11 @@
             const goingRight = dx === 1;
             const goingLeft = dx === -1;
 
-            // Start game on first key press
             if (!gameStarted && [LEFT_KEY, RIGHT_KEY, UP_KEY, DOWN_KEY].includes(keyPressed)) {
                 gameStarted = true;
                 main();
             }
 
-            // Change direction (and prevent reversing into itself)
             if (keyPressed === LEFT_KEY && !goingRight) {
                 dx = -1;
                 dy = 0;
@@ -195,14 +186,11 @@
             }
         }
 
-        // Check for collisions
         function hasGameEnded() {
-            // Did snake crash into itself?
             for (let i = 4; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
             }
             
-            // Did snake hit the walls?
             const hitLeftWall = snake[0].x < 0;
             const hitRightWall = snake[0].x >= tileCount;
             const hitTopWall = snake[0].y < 0;
